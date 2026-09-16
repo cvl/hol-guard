@@ -11,7 +11,29 @@ _SHELLROUTE_LAUNCHERS: tuple[tuple[str, ...], ...] = (
     ("exec", "shellroute"),
     ("xargs", "shellroute"),
 )
-_WRAPPER_LEADING_OPTIONS_WITH_VALUES = frozenset({"-n", "-P", "-I", "-L", "-s"})
+# Wrapper options that consume the next token; the executable comes after them.
+_WRAPPER_LEADING_OPTIONS_WITH_VALUES: dict[str, frozenset[str]] = {
+    "exec": frozenset({"-a"}),
+    "xargs": frozenset(
+        {
+            "-n",
+            "-P",
+            "-I",
+            "-L",
+            "-s",
+            "-d",
+            "-E",
+            "-a",
+            "--max-args",
+            "--max-procs",
+            "--max-lines",
+            "--max-chars",
+            "--delimiter",
+            "--arg-file",
+            "--eof",
+        }
+    ),
+}
 # Persistent flags accepted before any subcommand.
 _SHELLROUTE_GLOBAL_OPTIONS_WITH_VALUES = frozenset({"--api-key"})
 _SHELLROUTE_GLOBAL_FLAGS = frozenset({"--skip-version-check"})
@@ -29,10 +51,8 @@ def _subcommand_matcher(subcommand: str, options_with_values: frozenset[str]) ->
                 subcommand,
                 global_options_with_values=_SHELLROUTE_GLOBAL_OPTIONS_WITH_VALUES,
                 global_flags=_SHELLROUTE_GLOBAL_FLAGS,
-                allow_leading_options=launcher[0] in ("exec", "xargs"),
-                leading_options_with_values=(
-                    _WRAPPER_LEADING_OPTIONS_WITH_VALUES if launcher[0] in ("exec", "xargs") else frozenset()
-                ),
+                allow_leading_options=launcher[0] in _WRAPPER_LEADING_OPTIONS_WITH_VALUES,
+                leading_options_with_values=_WRAPPER_LEADING_OPTIONS_WITH_VALUES.get(launcher[0], frozenset()),
                 options_with_values=options_with_values,
                 fail_secure_unknown_options=True,
             )

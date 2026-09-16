@@ -48,8 +48,17 @@ SHELLROUTE_REVIEW_CASES: tuple[tuple[str, str, str], ...] = (
 
 SHELLROUTE_WRAPPER_REVIEW_COMMANDS: tuple[tuple[str, str], ...] = (
     ("exec shellroute run US -- curl https://example.com", _RUN_RULE),
+    # exec -a takes a value (the argv[0] to present); the executable follows it.
+    ("exec -a shellroute shellroute run US -- curl https://example.com", _RUN_RULE),
+    ("exec -a sr shellroute proxy stop", _PROXY_RULE),
+    ("exec -c -a shellroute shellroute reveal-key", _REVEAL_RULE),
     ("xargs shellroute run US -- curl https://example.com", _RUN_RULE),
     ("xargs -n 1 shellroute proxy stop", _PROXY_RULE),
+    ("xargs -I {} shellroute run US -- curl {}", _RUN_RULE),
+    ("xargs -P 2 -n 1 shellroute proxy stop", _PROXY_RULE),
+    ("xargs --max-args=1 shellroute reveal-key", _REVEAL_RULE),
+    ("xargs --max-args 1 shellroute reveal-key", _REVEAL_RULE),
+    ("xargs -d , shellroute run US -- curl https://example.com", _RUN_RULE),
     ("shellroute --api-key placeholder run US -- curl https://example.com", _RUN_RULE),
     ("shellroute --api-key=placeholder proxy --country US", _PROXY_RULE),
     ("shellroute --skip-version-check reveal-key", _REVEAL_RULE),
@@ -57,6 +66,9 @@ SHELLROUTE_WRAPPER_REVIEW_COMMANDS: tuple[tuple[str, str], ...] = (
 
 SHELLROUTE_SAFE_COMMANDS: tuple[str, ...] = (
     "shellroute status",
+    "exec -a shellroute shellroute status",
+    "xargs -n 1 shellroute countries",
+    "xargs -I {} shellroute cities {}",
     "shellroute countries",
     "shellroute cities US",
     "shellroute balance",
