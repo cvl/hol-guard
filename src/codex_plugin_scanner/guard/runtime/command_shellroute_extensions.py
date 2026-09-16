@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .command_extension_matchers import executable_matcher, executable_names, safe_flag_variant
 from .command_extension_specs import CommandExtensionSpec
+from .command_launcher_floors import XARGS_VALUE_OPTIONS
 from .command_rules import AnyMatcher, CommandSafetyRule
 
 # The direct launcher gets portable names from executable_matcher; wrapped
@@ -14,27 +15,10 @@ _SHELLROUTE_LAUNCHERS: tuple[tuple[str, ...], ...] = (
     *(("xargs", name) for name in sorted(executable_names("shellroute"))),
 )
 # Wrapper options that consume the next token; the executable comes after them.
+# xargs reuses Guard's shared launcher grammar so both stay in step.
 _WRAPPER_LEADING_OPTIONS_WITH_VALUES: dict[str, frozenset[str]] = {
     "exec": frozenset({"-a"}),
-    "xargs": frozenset(
-        {
-            "-n",
-            "-P",
-            "-I",
-            "-L",
-            "-s",
-            "-d",
-            "-E",
-            "-a",
-            "--max-args",
-            "--max-procs",
-            "--max-lines",
-            "--max-chars",
-            "--delimiter",
-            "--arg-file",
-            "--eof",
-        }
-    ),
+    "xargs": XARGS_VALUE_OPTIONS,
 }
 # Persistent flags accepted before any subcommand.
 _SHELLROUTE_GLOBAL_OPTIONS_WITH_VALUES = frozenset({"--api-key"})

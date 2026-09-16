@@ -66,6 +66,12 @@ SHELLROUTE_WRAPPER_REVIEW_COMMANDS: tuple[tuple[str, str], ...] = (
     ("xargs -d , shellroute run US -- curl https://example.com", _RUN_RULE),
     ("xargs -L 1 shellroute proxy stop", _PROXY_RULE),
     ("xargs -s 4096 shellroute run US -- curl https://example.com", _RUN_RULE),
+    # Remaining value-taking options from Guard's shared xargs grammar.
+    ("xargs -J % shellroute run US -- curl %", _RUN_RULE),
+    ("xargs -R 1 shellroute proxy stop", _PROXY_RULE),
+    ("xargs -S 255 shellroute reveal-key", _REVEAL_RULE),
+    ("xargs -e EOF shellroute proxy stop", _PROXY_RULE),
+    ("xargs --replace {} shellroute run US -- curl {}", _RUN_RULE),
     # Portable names stay recognized behind a wrapper.
     ("exec shellroute.exe run US -- curl https://example.com", _RUN_RULE),
     ("exec -a shellroute shellroute.cmd proxy stop", _PROXY_RULE),
