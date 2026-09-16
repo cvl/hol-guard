@@ -39,6 +39,11 @@ SHELLROUTE_REVIEW_CASES: tuple[tuple[str, str, str], ...] = (
     # `--help` after `--` is the child's flag, not the documented safe variant.
     ("shellroute run US -- shellroute --help", _RUN_ACTION, _RUN_RULE),
     ("shellroute.exe run US -- curl https://example.com", _RUN_ACTION, _RUN_RULE),
+    ("shellroute.cmd reveal-key", _REVEAL_ACTION, _REVEAL_RULE),
+    # Reordered flags: after the positional country, and proxy options in either order.
+    ("shellroute run US --no-stat -- curl https://example.com", _RUN_ACTION, _RUN_RULE),
+    ("shellroute run --sticky --country GB -- wget https://example.com", _RUN_ACTION, _RUN_RULE),
+    ("shellroute proxy --format env --country DE", _PROXY_ACTION, _PROXY_RULE),
     ("shellroute proxy --country US", _PROXY_ACTION, _PROXY_RULE),
     ("shellroute proxy --country DE --format env", _PROXY_ACTION, _PROXY_RULE),
     ("shellroute proxy", _PROXY_ACTION, _PROXY_RULE),
@@ -59,6 +64,17 @@ SHELLROUTE_WRAPPER_REVIEW_COMMANDS: tuple[tuple[str, str], ...] = (
     ("xargs --max-args=1 shellroute reveal-key", _REVEAL_RULE),
     ("xargs --max-args 1 shellroute reveal-key", _REVEAL_RULE),
     ("xargs -d , shellroute run US -- curl https://example.com", _RUN_RULE),
+    ("xargs -L 1 shellroute proxy stop", _PROXY_RULE),
+    ("xargs -s 4096 shellroute run US -- curl https://example.com", _RUN_RULE),
+    # Portable names stay recognized behind a wrapper.
+    ("exec shellroute.exe run US -- curl https://example.com", _RUN_RULE),
+    ("exec -a shellroute shellroute.cmd proxy stop", _PROXY_RULE),
+    ("xargs -n 1 shellroute.cmd reveal-key", _REVEAL_RULE),
+    ("xargs shellroute.exe proxy --country US", _PROXY_RULE),
+    # Unknown options before the subcommand fail secure: still reviewed.
+    ("shellroute --bogus run US -- curl https://example.com", _RUN_RULE),
+    ("shellroute --bogus value proxy stop", _PROXY_RULE),
+    ("shellroute --unknown-flag reveal-key", _REVEAL_RULE),
     ("shellroute --api-key placeholder run US -- curl https://example.com", _RUN_RULE),
     ("shellroute --api-key=placeholder proxy --country US", _PROXY_RULE),
     ("shellroute --skip-version-check reveal-key", _REVEAL_RULE),

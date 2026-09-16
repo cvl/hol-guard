@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from .command_extension_matchers import executable_matcher, safe_flag_variant
+from .command_extension_matchers import executable_matcher, executable_names, safe_flag_variant
 from .command_extension_specs import CommandExtensionSpec
 from .command_rules import AnyMatcher, CommandSafetyRule
 
+# The direct launcher gets portable names from executable_matcher; wrapped
+# launchers must spell them out because the wrapped name is matched literally.
 _SHELLROUTE_LAUNCHERS: tuple[tuple[str, ...], ...] = (
     ("shellroute",),
-    ("exec", "shellroute"),
-    ("xargs", "shellroute"),
+    *(("exec", name) for name in sorted(executable_names("shellroute"))),
+    *(("xargs", name) for name in sorted(executable_names("shellroute"))),
 )
 # Wrapper options that consume the next token; the executable comes after them.
 _WRAPPER_LEADING_OPTIONS_WITH_VALUES: dict[str, frozenset[str]] = {
