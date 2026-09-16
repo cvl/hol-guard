@@ -9,20 +9,47 @@ from .command_rules import AnyMatcher, CommandSafetyRule
 
 # The direct launcher gets portable names from executable_matcher; wrapped
 # launchers must spell them out because the wrapped name is matched literally.
-_SHELLROUTE_LAUNCHERS: tuple[tuple[str, ...], ...] = (
-    ("shellroute",),
-    *(("exec", name) for name in sorted(executable_names("shellroute"))),
-    *(("setsid", name) for name in sorted(executable_names("shellroute"))),
-    *(("xargs", name) for name in sorted(executable_names("shellroute"))),
-)
-# Wrapper options that consume the next token; the executable comes after them.
-# xargs reuses Guard's shared launcher grammar so both stay in step.
-_WRAPPER_LEADING_OPTIONS_WITH_VALUES: dict[str, frozenset[str]] = {
+# Process wrappers: the shellroute executable follows the wrapper and its options.
+# exec -a takes the argv[0] value, setsid takes only switches, and xargs reuses
+# Guard's shared launcher grammar so the two cannot drift apart.
+_WRAPPER_PREFIXES: dict[str, frozenset[str]] = {
     "exec": frozenset({"-a"}),
-    # setsid takes only switches (-c/--ctty, -f/--fork, -w/--wait).
     "setsid": frozenset(),
     "xargs": XARGS_VALUE_OPTIONS,
 }
+# npm-style runners name shellroute as the package to execute. These reach
+# command.package.node for supply-chain review, which does not cover what the
+# resulting shellroute command then does.
+_RUNNER_PREFIXES: tuple[tuple[str, ...], ...] = (
+    ("npx",),
+    ("bunx",),
+    ("pnpm",),
+    ("yarn",),
+    ("npm", "exec"),
+    ("pnpm", "exec"),
+    ("pnpm", "dlx"),
+    ("yarn", "dlx"),
+)
+_RUNNER_OPTIONS_WITH_VALUES = frozenset(
+    {"--cache", "--call", "--dir", "--filter", "--package", "--reporter", "--workspace", "-C", "-F", "-c", "-p", "-w"}
+)
+_RUNNER_FLAGS = frozenset(
+    {"--aggregate-output", "--silent", "--stream", "--use-stderr", "--workspace-root", "--yes", "-y"}
+)
+# Each form is (tokens before the subcommand, leading options with values, leading flags).
+_SHELLROUTE_LAUNCHERS: tuple[tuple[tuple[str, ...], frozenset[str], frozenset[str]], ...] = (
+    (("shellroute",), frozenset(), frozenset()),
+    *(
+        ((wrapper, name), options, frozenset())
+        for wrapper, options in _WRAPPER_PREFIXES.items()
+        for name in sorted(executable_names("shellroute"))
+    ),
+    *(
+        ((*runner, name), _RUNNER_OPTIONS_WITH_VALUES, _RUNNER_FLAGS)
+        for runner in _RUNNER_PREFIXES
+        for name in sorted(executable_names("shellroute"))
+    ),
+)
 # Persistent flags accepted before any subcommand.
 _SHELLROUTE_GLOBAL_OPTIONS_WITH_VALUES = frozenset({"--api-key"})
 _SHELLROUTE_GLOBAL_FLAGS = frozenset({"--skip-version-check"})
@@ -36,16 +63,16 @@ def _subcommand_matcher(subcommand: str, options_with_values: frozenset[str]) ->
     return AnyMatcher(
         matchers=tuple(
             executable_matcher(
-                *launcher,
+                *tokens,
                 subcommand,
-                global_options_with_values=_SHELLROUTE_GLOBAL_OPTIONS_WITH_VALUES,
-                global_flags=_SHELLROUTE_GLOBAL_FLAGS,
-                allow_leading_options=launcher[0] in _WRAPPER_LEADING_OPTIONS_WITH_VALUES,
-                leading_options_with_values=_WRAPPER_LEADING_OPTIONS_WITH_VALUES.get(launcher[0], frozenset()),
+                global_options_with_values=_SHELLROUTE_GLOBAL_OPTIONS_WITH_VALUES | leading_options,
+                global_flags=_SHELLROUTE_GLOBAL_FLAGS | leading_flags,
+                allow_leading_options=len(tokens) > 1,
+                leading_options_with_values=leading_options,
                 options_with_values=options_with_values,
                 fail_secure_unknown_options=True,
             )
-            for launcher in _SHELLROUTE_LAUNCHERS
+            for tokens, leading_options, leading_flags in _SHELLROUTE_LAUNCHERS
         )
     )
 
