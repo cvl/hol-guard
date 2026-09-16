@@ -116,9 +116,7 @@ SHELLROUTE_COMMAND_RULES = (
         severity="medium",
         risk_classes=("destructive_shell", "network_egress"),
         action_classes=("shellroute proxy lifecycle command",),
-        safer_alternatives=(
-            "Inspect running sessions with `shellroute status` before starting or stopping a proxy.",
-        ),
+        safer_alternatives=("Inspect running sessions with `shellroute status` before starting or stopping a proxy.",),
         matcher=_SHELLROUTE_PROXY,
         default_mode="review",
         safe_variants=(
