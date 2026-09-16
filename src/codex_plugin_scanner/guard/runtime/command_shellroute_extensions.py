@@ -12,12 +12,15 @@ from .command_rules import AnyMatcher, CommandSafetyRule
 _SHELLROUTE_LAUNCHERS: tuple[tuple[str, ...], ...] = (
     ("shellroute",),
     *(("exec", name) for name in sorted(executable_names("shellroute"))),
+    *(("setsid", name) for name in sorted(executable_names("shellroute"))),
     *(("xargs", name) for name in sorted(executable_names("shellroute"))),
 )
 # Wrapper options that consume the next token; the executable comes after them.
 # xargs reuses Guard's shared launcher grammar so both stay in step.
 _WRAPPER_LEADING_OPTIONS_WITH_VALUES: dict[str, frozenset[str]] = {
     "exec": frozenset({"-a"}),
+    # setsid takes only switches (-c/--ctty, -f/--fork, -w/--wait).
+    "setsid": frozenset(),
     "xargs": XARGS_VALUE_OPTIONS,
 }
 # Persistent flags accepted before any subcommand.

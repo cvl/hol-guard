@@ -77,6 +77,11 @@ SHELLROUTE_WRAPPER_REVIEW_COMMANDS: tuple[tuple[str, str], ...] = (
     ("exec -a shellroute shellroute.cmd proxy stop", _PROXY_RULE),
     ("xargs -n 1 shellroute.cmd reveal-key", _REVEAL_RULE),
     ("xargs shellroute.exe proxy --country US", _PROXY_RULE),
+    # setsid detaches the child from the controlling terminal; it takes only switches.
+    ("setsid shellroute reveal-key", _REVEAL_RULE),
+    ("setsid -f shellroute run US -- curl https://example.com", _RUN_RULE),
+    ("setsid --fork --wait shellroute proxy stop", _PROXY_RULE),
+    ("setsid -c -w shellroute.exe proxy --country US", _PROXY_RULE),
     # Unknown options before the subcommand fail secure: still reviewed.
     ("shellroute --bogus run US -- curl https://example.com", _RUN_RULE),
     ("shellroute --bogus value proxy stop", _PROXY_RULE),
@@ -91,6 +96,9 @@ SHELLROUTE_SAFE_COMMANDS: tuple[str, ...] = (
     "exec -a shellroute shellroute status",
     "xargs -n 1 shellroute countries",
     "xargs -I {} shellroute cities {}",
+    "setsid shellroute status",
+    "setsid -f shellroute balance",
+    "setsid shellroute reveal-key --help",
     "shellroute countries",
     "shellroute cities US",
     "shellroute balance",
